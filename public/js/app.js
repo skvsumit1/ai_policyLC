@@ -119,6 +119,14 @@ const GLOSSARY = {
   edi_810:             'EDI 810 (Invoice Transaction) — The HIPAA-compliant electronic format for transmitting invoice data to large group employers or third-party administrators (TPAs). It encodes the billing period, premium amount, subscriber list, and remittance instructions in ASC X12 segments.',
   remittance:          'Remittance — The formal transfer of premium payment from the policyholder (or employer) to the insurer, accompanied by a remittance advice document listing which invoices the payment covers. Timely remittance is required to maintain the policy in force.',
   write_off:           'Write-Off — A formal accounting action where the insurer removes an uncollectable premium balance from accounts receivable after exhausting the dunning process. The amount is transferred to a bad-debt expense account and the account may be referred to a collections agency.',
+
+  /* ── Premium Calculations ── */
+  annualized_premium:  'Annualized Premium — Your monthly premium multiplied by 12, representing the total policy cost if you pay monthly for a full year. Used as the baseline when comparing billing frequency options and projecting your annual insurance expense.',
+  daily_rate:          'Daily Rate — Annual premium ÷ 365. Used to prorate charges for partial billing periods (e.g., if a policy activates on the 15th of a month, only the remaining days of that month are billed). Formula: Annual Premium ÷ 365 = Daily Rate.',
+  billing_frequency:   'Billing Frequency — How often you pay your premium: Monthly (12 payments), Quarterly (4 payments), Semi-Annual (2 payments), or Annual (1 payment). Paying less frequently earns a discount (typically 1–5%) because the insurer receives funds earlier and reduces collections processing overhead.',
+  ytd_premium:         'YTD Premium — Total premium payments made from the start of the current policy year through today. Compare against benefit used to gauge how much value you\'ve extracted from your coverage so far.',
+  coverage_efficiency: 'Coverage Efficiency Ratio — Dollar value of claims the plan has covered ÷ total premiums you\'ve paid YTD. A ratio ≥ 1.0x means the plan has paid out at least as much as you\'ve contributed — you\'ve broken even. Higher = better value received.',
+  break_even:          'Break-Even Point — The number of months of premium payments needed for cumulative premiums to equal the Annual Maximum benefit. Formula: Annual Maximum ÷ Monthly Premium = Break-Even Months. Reaching it means you could theoretically recoup a full year of maximum benefit from that point forward.',
 };
 
 function learnIcon(term) {

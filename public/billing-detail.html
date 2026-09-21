@@ -130,6 +130,9 @@
 
     </div><!-- /row -->
 
+    <!-- ── Premium & Coverage Breakdown (populated by renderBreakdown()) ── -->
+    <div id="breakdown-card" class="card section-card mt-4 d-none"></div>
+
     <!-- ── Invoice Lifecycle ───────────────────────────────────────── -->
     <div class="card section-card mt-4">
       <div class="card-header d-flex align-items-center gap-2">
@@ -266,16 +269,182 @@ let currentInvoice = null;
 const payModal = new bootstrap.Modal(document.getElementById('payModal'));
 
 async function loadInvoice() {
-  if (!invoiceId) {
-    showError('No invoice ID provided.');
-    return;
-  }
+  if (!invoiceId) { showError('No invoice ID provided.'); return; }
   try {
     currentInvoice = await API.get(`/billing/${invoiceId}`);
     renderInvoice(currentInvoice);
+    // Load breakdown data as a non-blocking progressive enhancement
+    try {
+      const [policy, allInvoices] = await Promise.all([
+        API.get(`/policies/${currentInvoice.policyID}`),
+        API.get(`/billing/holder/${currentInvoice.policyholderID}`)
+      ]);
+      renderBreakdown(currentInvoice, policy, allInvoices);
+    } catch (_) { /* breakdown is optional */ }
   } catch (err) {
     showError(err.message);
   }
+}
+
+function renderBreakdown(inv, policy, allInvoices) {
+  const el = document.getElementById('breakdown-card');
+  if (!el) return;
+
+  /* ── Premium math ── */
+  const monthly = policy.premiumAmount;
+  const annual  = monthly * 12;
+  const daily   = annual / 365;
+
+  /* ── YTD stats ── */
+  const invYear     = new Date(inv.createdAt).getFullYear();
+  const paidYTD     = allInvoices.filter(i =>
+    i.policyID === inv.policyID &&
+    i.status   === 'Paid' &&
+    new Date(i.createdAt).getFullYear() === invYear
+  );
+  const ytdPaid     = paidYTD.reduce((s, i) => s + i.amount, 0);
+  const monthsPaid  = paidYTD.length;
+  const benefitUsed = policy.annualMaximum - policy.remainingBenefit;
+  const benefitPct  = policy.annualMaximum > 0
+    ? Math.min(100, +(benefitUsed / policy.annualMaximum * 100).toFixed(1)) : 0;
+  const dedPct      = policy.deductible > 0
+    ? Math.min(100, Math.round(policy.deductibleMet / policy.deductible * 100)) : 100;
+  const effRatio    = ytdPaid > 0 ? +(benefitUsed / ytdPaid).toFixed(2) : null;
+  const breakEvenMo = monthly > 0 ? Math.ceil(policy.annualMaximum / monthly) : null;
+
+  /* ── Billing cycle comparison ──
+       Discounts are typical industry estimates (1–5%) for less-frequent billing.  */
+  const cycles = [
+    { label: 'Monthly',     payments: 12, discount: 0    },
+    { label: 'Quarterly',   payments: 4,  discount: 0.01 },
+    { label: 'Semi-Annual', payments: 2,  discount: 0.02 },
+    { label: 'Annual',      payments: 1,  discount: 0.05 },
+  ];
+
+  const cycleRows = cycles.map(c => {
+    const annCost  = +(annual * (1 - c.discount)).toFixed(2);
+    const perPmt   = +(annCost / c.payments).toFixed(2);
+    const saving   = +(annual - annCost).toFixed(2);
+    const current  = policy.premiumFrequency === c.label;
+    return `
+      <tr${current ? ' class="table-primary fw-semibold"' : ''}>
+        <td class="ps-0">${c.label}${current
+          ? ' <span class="badge bg-primary ms-1" style="font-size:.58rem;vertical-align:middle">Current</span>'
+          : ''}</td>
+        <td class="text-end">${fmt$(perPmt)}</td>
+        <td class="text-end">${fmt$(annCost)}</td>
+        <td class="text-end">${saving > 0
+          ? `<span class="text-success fw-semibold">Save ${fmt$(saving)}</span>`
+          : '<span class="text-muted">—</span>'}</td>
+      </tr>`;
+  }).join('');
+
+  el.classList.remove('d-none');
+  el.innerHTML = `
+    <div class="card-header d-flex align-items-center gap-2">
+      Premium &amp; Coverage Breakdown ${learnIcon('premium_calculation')}
+    </div>
+    <div class="card-body">
+      <div class="row g-4">
+
+        <!-- Left column: math + cycle table -->
+        <div class="col-md-6">
+          <div class="cal-label">Premium Calculation ${learnIcon('premium')}</div>
+          <table class="table table-sm table-borderless mb-0 small">
+            <tr>
+              <td class="text-muted ps-0 py-1">Monthly Premium</td>
+              <td class="text-end py-1 fw-semibold">${fmt$(monthly)}</td>
+            </tr>
+            <tr>
+              <td class="text-muted ps-0 py-1">Annualized ${learnIcon('annualized_premium')}</td>
+              <td class="text-end py-1">${fmt$(monthly)} &times; 12 = <strong class="text-primary">${fmt$(annual)}</strong> / yr</td>
+            </tr>
+            <tr>
+              <td class="text-muted ps-0 py-1">Daily Rate ${learnIcon('daily_rate')}</td>
+              <td class="text-end py-1">${fmt$(annual)} &divide; 365 = <strong class="text-primary">${fmt$(daily)}</strong> / day</td>
+            </tr>
+          </table>
+
+          <div class="cal-label mt-4">Billing Frequency Options ${learnIcon('billing_frequency')}</div>
+          <table class="table table-sm mb-0 small">
+            <thead>
+              <tr class="text-muted" style="font-size:.72rem">
+                <th class="ps-0 fw-normal border-0">Cycle</th>
+                <th class="text-end fw-normal border-0">Per Payment</th>
+                <th class="text-end fw-normal border-0">Annual Cost</th>
+                <th class="text-end fw-normal border-0">vs Monthly</th>
+              </tr>
+            </thead>
+            <tbody>${cycleRows}</tbody>
+          </table>
+          <div class="text-muted mt-1" style="font-size:.68rem">
+            * Savings are typical industry estimates. Actual discounts vary by carrier.
+          </div>
+        </div>
+
+        <!-- Right column: YTD + progress bars -->
+        <div class="col-md-6">
+          <div class="cal-label">Year-to-Date Coverage (${invYear}) ${learnIcon('ytd_premium')}</div>
+          <table class="table table-sm table-borderless mb-0 small">
+            <tr>
+              <td class="text-muted ps-0 py-1">Premiums Paid</td>
+              <td class="text-end py-1 fw-semibold">
+                ${fmt$(ytdPaid)}
+                <span class="text-muted fw-normal">(${monthsPaid} mo)</span>
+              </td>
+            </tr>
+            <tr>
+              <td class="text-muted ps-0 py-1">Benefit Used</td>
+              <td class="text-end py-1 fw-semibold">${fmt$(benefitUsed)}</td>
+            </tr>
+            <tr>
+              <td class="text-muted ps-0 py-1">Coverage Efficiency ${learnIcon('coverage_efficiency')}</td>
+              <td class="text-end py-1 fw-semibold">
+                ${effRatio !== null
+                  ? `<span class="${effRatio >= 1 ? 'text-success' : 'text-muted'}">${effRatio}x</span>`
+                  : '<span class="text-muted">—</span>'}
+              </td>
+            </tr>
+            <tr>
+              <td class="text-muted ps-0 py-1">Break-Even ${learnIcon('break_even')}</td>
+              <td class="text-end py-1 fw-semibold">
+                ${breakEvenMo
+                  ? `${breakEvenMo} mo → <span class="text-muted fw-normal">${fmt$(policy.annualMaximum)} max</span>`
+                  : '—'}
+              </td>
+            </tr>
+          </table>
+
+          <div class="cal-label mt-4">Annual Benefit ${learnIcon('annual_max')}</div>
+          <div class="d-flex justify-content-between small mb-1">
+            <span class="text-muted">Used ${fmt$(benefitUsed)}</span>
+            <span class="text-muted">${benefitPct}% of ${fmt$(policy.annualMaximum)}</span>
+          </div>
+          <div class="progress coverage-bar mb-1">
+            <div class="progress-bar bg-primary" style="width:${benefitPct}%"></div>
+          </div>
+          <div class="small mb-3">
+            Remaining: <strong class="text-primary">${fmt$(policy.remainingBenefit)}</strong>
+            ${learnIcon('remaining_benefit')}
+          </div>
+
+          <div class="cal-label">Deductible Progress ${learnIcon('deductible')}</div>
+          <div class="d-flex justify-content-between small mb-1">
+            <span class="text-muted">Met ${fmt$(policy.deductibleMet)}</span>
+            <span class="text-muted">${dedPct}% of ${fmt$(policy.deductible)}</span>
+          </div>
+          <div class="progress coverage-bar mb-1">
+            <div class="progress-bar bg-success" style="width:${dedPct}%"></div>
+          </div>
+          <div class="small mt-1">
+            ${dedPct >= 100
+              ? '<span class="text-success">✓ Deductible fully met — plan pays at full coinsurance rate</span>'
+              : `<span class="text-muted">${fmt$(policy.deductible - policy.deductibleMet)} remaining before full coinsurance applies</span>`}
+          </div>
+        </div>
+
+      </div>
+    </div>`;
 }
 
 function renderInvoice(inv) {

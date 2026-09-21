@@ -170,3 +170,16 @@ body {
 .bt-step.bt-overdue .bt-dot { background: #dc3545; box-shadow: 0 0 0 4px rgba(220,53,69,.18); }
 .bt-title { font-size: .88rem; font-weight: 600; margin-bottom: 2px; }
 .bt-desc  { font-size: .8rem; line-height: 1.55; }
+
+/* ── Calculation breakdown labels ─────────────────────────────────────── */
+.cal-label {
+  font-size: .72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: #6c757d;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
