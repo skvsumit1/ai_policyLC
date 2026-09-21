@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invoice Details — DentalCare Insurance</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container-fluid px-4">
+    <a class="navbar-brand" href="index.html">🦷 DentalCare</a>
+    <div class="ms-auto d-flex align-items-center gap-3">
+      <span class="text-white-50 small" id="user-greeting"></span>
+      <button class="btn btn-outline-light btn-sm" onclick="logout()">Sign Out</button>
+    </div>
+  </div>
+</nav>
+
+<div class="container py-4" style="max-width:780px">
+
+  <!-- Back + breadcrumb -->
+  <div class="d-flex align-items-center gap-2 mb-4">
+    <button class="btn btn-outline-secondary btn-sm" onclick="history.back()">← Back</button>
+    <span class="text-muted small">Billing / <span id="breadcrumb-invoice-number" class="text-dark fw-semibold">—</span></span>
+  </div>
+
+  <!-- Loading state -->
+  <div id="loading-state" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status"></div>
+    <div class="mt-2 text-muted small">Loading invoice…</div>
+  </div>
+
+  <!-- Error state -->
+  <div id="error-state" class="alert alert-danger d-none" role="alert">
+    <strong>Error:</strong> <span id="error-msg"></span>
+  </div>
+
+  <!-- Main content -->
+  <div id="main-content" class="d-none">
+
+    <!-- Header card -->
+    <div class="card section-card mb-4">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+          <div>
+            <h5 class="fw-bold mb-1" id="invoice-number-heading">—</h5>
+            <div class="text-muted small" id="invoice-created-at">Issued —</div>
+          </div>
+          <div id="invoice-status-badge"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4">
+
+      <!-- Left: Invoice details -->
+      <div class="col-md-6">
+        <div class="card section-card h-100">
+          <div class="card-header">Invoice Details</div>
+          <div class="card-body">
+            <dl class="row small mb-0">
+              <dt class="col-5 text-muted">Invoice Number</dt>
+              <dd class="col-7 fw-semibold" id="d-invoiceNumber">—</dd>
+
+              <dt class="col-5 text-muted">Billing Period <span class="learn-icon" data-learn="billing_period"></span></dt>
+              <dd class="col-7" id="d-billingPeriod">—</dd>
+
+              <dt class="col-5 text-muted">Due Date <span class="learn-icon" data-learn="grace_period"></span></dt>
+              <dd class="col-7" id="d-dueDate">—</dd>
+
+              <dt class="col-5 text-muted">Paid Date</dt>
+              <dd class="col-7" id="d-paidDate">—</dd>
+
+              <dt class="col-5 text-muted">Policy ID</dt>
+              <dd class="col-7"><code id="d-policyID">—</code></dd>
+
+              <dt class="col-5 text-muted">Created <span class="learn-icon" data-learn="invoice_generation"></span></dt>
+              <dd class="col-7" id="d-createdAt">—</dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Amount + actions -->
+      <div class="col-md-6">
+        <div class="card section-card mb-4">
+          <div class="card-header">Amount Due <span class="learn-icon" data-learn="premium"></span></div>
+          <div class="card-body text-center py-4">
+            <div class="text-muted small mb-1">Invoice Total <span class="learn-icon" data-learn="premium_calculation"></span></div>
+            <div class="fw-bold mb-2" style="font-size:2.4rem" id="f-amount">—</div>
+            <div id="invoice-status-inline"></div>
+          </div>
+        </div>
+
+        <!-- Overdue notice -->
+        <div class="alert alert-danger d-none" id="overdue-notice">
+          <strong>Overdue <span class="learn-icon" data-learn="grace_period"></span></strong> — This invoice is past its due date. Please make payment as soon as possible to avoid policy lapse <span class="learn-icon" data-learn="lapse"></span>.
+        </div>
+
+        <!-- Paid confirmation -->
+        <div class="card section-card d-none" id="paid-card">
+          <div class="card-body">
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge bg-success fs-6">✓ Paid</span>
+              <span class="text-muted small">Payment received on <strong id="paid-on-date">—</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pay action (policyholders) -->
+        <div class="card section-card d-none" id="pay-card">
+          <div class="card-body">
+            <p class="small text-muted mb-3">Your premium payment keeps your coverage active. Pay now to avoid any disruption.</p>
+            <button class="btn btn-success w-100" onclick="openPayModal()">Pay Now — <span id="pay-btn-amount">—</span></button>
+          </div>
+        </div>
+
+        <!-- Admin mark-paid/overdue actions -->
+        <div class="card section-card d-none" id="admin-actions">
+          <div class="card-body d-flex gap-2">
+            <button class="btn btn-outline-success btn-sm flex-fill" onclick="markPaid()">Mark Paid</button>
+            <button class="btn btn-outline-danger btn-sm flex-fill d-none" id="btn-mark-overdue" onclick="markOverdue()">Mark Overdue</button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /row -->
+
+    <!-- ── Invoice Lifecycle ───────────────────────────────────────── -->
+    <div class="card section-card mt-4">
+      <div class="card-header d-flex align-items-center gap-2">
+        Invoice Lifecycle <span class="learn-icon" data-learn="billing_cycle"></span>
+      </div>
+      <div class="card-body pb-2">
+
+        <div class="billing-timeline">
+
+          <!-- Step 1 -->
+          <div class="bt-step bt-done" id="bt-1">
+            <div class="bt-dot"></div>
+            <div class="bt-content">
+              <div class="bt-title">1. Invoice Generated <span class="learn-icon" data-learn="invoice_generation"></span></div>
+              <div class="bt-desc text-muted">System creates the invoice at the billing cycle anchor date, recording the period, premium amount, and due date. A creation timestamp is logged for audit.</div>
+            </div>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="bt-step bt-done" id="bt-2">
+            <div class="bt-dot"></div>
+            <div class="bt-content">
+              <div class="bt-title">2. Invoice Exported &amp; Delivered <span class="learn-icon" data-learn="invoice_export"></span></div>
+              <div class="bt-desc text-muted">Packaged as a PDF and/or EDI 810 <span class="learn-icon" data-learn="edi_810"></span> transaction and sent via member portal, email, or mail. Delivery is timestamped to start the payment window clock.</div>
+            </div>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="bt-step" id="bt-3">
+            <div class="bt-dot"></div>
+            <div class="bt-content">
+              <div class="bt-title">3. Payment Window Open <span class="learn-icon" data-learn="grace_period"></span></div>
+              <div class="bt-desc text-muted">Policyholder submits remittance <span class="learn-icon" data-learn="remittance"></span> on or before the due date. Premium <span class="learn-icon" data-learn="premium"></span> must be received to keep coverage active through the billing period.</div>
+            </div>
+          </div>
+
+          <!-- Step 4 — content swapped by renderLifecycle() -->
+          <div class="bt-step" id="bt-4">
+            <div class="bt-dot"></div>
+            <div class="bt-content" id="bt-4-content">
+              <div class="bt-title">4. Payment Posted <span class="learn-icon" data-learn="payment_posting"></span></div>
+              <div class="bt-desc text-muted">Received payment is matched to this invoice and posted to the billing ledger. Status changes to Paid and a receipt timestamp is stamped on the record.</div>
+            </div>
+          </div>
+
+          <!-- Step 5 -->
+          <div class="bt-step" id="bt-5">
+            <div class="bt-dot"></div>
+            <div class="bt-content">
+              <div class="bt-title">5. Reconciled <span class="learn-icon" data-learn="reconciliation"></span></div>
+              <div class="bt-desc text-muted">Finance runs daily/monthly reconciliation to match all received payments against open invoices in the billing system. Discrepancies are flagged before the books are closed.</div>
+            </div>
+          </div>
+
+        </div><!-- /billing-timeline -->
+
+        <!-- Overdue path alert -->
+        <div class="mt-3 p-3 rounded small d-none" id="overdue-path-note"
+             style="background:#fff8e1;border:1px solid #ffc107">
+          <div class="fw-semibold mb-1">Overdue Path Active</div>
+          The dunning process <span class="learn-icon" data-learn="dunning"></span> has begun — escalating reminders are sent at Day 1, Day 15, and Day 30 past due.
+          Continued non-payment ages the invoice <span class="learn-icon" data-learn="aging"></span> and may trigger a policy lapse <span class="learn-icon" data-learn="lapse"></span>.
+          Persistent balances are written off <span class="learn-icon" data-learn="write_off"></span> and may be referred to collections.
+        </div>
+
+        <!-- Technical context (collapsed) -->
+        <div class="mt-3 mb-2">
+          <button class="btn btn-link btn-sm p-0 text-muted text-decoration-none" type="button"
+                  data-bs-toggle="collapse" data-bs-target="#tech-billing-details">
+            Technical billing context ▾
+          </button>
+          <div class="collapse mt-2" id="tech-billing-details">
+            <div class="p-3 rounded small" style="background:#f8f9fa;border:1px solid #dee2e6;line-height:1.7">
+              <p class="mb-2">
+                <strong>EDI Transactions:</strong> Large group invoices are transmitted as
+                EDI 810 <span class="learn-icon" data-learn="edi_810"></span> transactions through a clearinghouse
+                <span class="learn-icon" data-learn="clearinghouse"></span>.
+                Payments return as EDI 835 <span class="learn-icon" data-learn="edi_835"></span> /
+                ERA <span class="learn-icon" data-learn="era"></span>, which auto-post in provider billing systems.
+              </p>
+              <p class="mb-2">
+                <strong>Premium Calculation:</strong>
+                Your monthly premium <span class="learn-icon" data-learn="premium_calculation"></span>
+                is actuarially priced at policy issuance and does not change mid-term unless you update coverage.
+                Factors include age band, plan tier, and geographic rating area.
+              </p>
+              <p class="mb-0">
+                <strong>Aging &amp; Write-Offs:</strong>
+                Unpaid invoices are tracked in an aging report <span class="learn-icon" data-learn="aging"></span>
+                (0–30, 31–60, 61–90, 90+ days). After 90+ days, balances may be
+                written off <span class="learn-icon" data-learn="write_off"></span>
+                and the account referred to a collections agency.
+              </p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /Invoice Lifecycle -->
+
+  </div><!-- /#main-content -->
+</div><!-- /.container -->
+
+<div class="modal fade" id="payModal" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h6 class="modal-title">Confirm Payment</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-1">Mark invoice <strong id="pay-invoice-number"></strong> as paid?</p>
+        <p class="text-muted small">Amount: <strong id="pay-invoice-amount"></strong></p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-sm btn-success" id="confirm-pay-btn">Confirm Payment</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/app.js"></script>
+<script>
+requireLogin();
+const user = getUser();
+document.getElementById('user-greeting').textContent = `👤 ${user.name}`;
+
+const params = new URLSearchParams(window.location.search);
+const invoiceId = params.get('id');
+
+let currentInvoice = null;
+const payModal = new bootstrap.Modal(document.getElementById('payModal'));
+
+async function loadInvoice() {
+  if (!invoiceId) {
+    showError('No invoice ID provided.');
+    return;
+  }
+  try {
+    currentInvoice = await API.get(`/billing/${invoiceId}`);
+    renderInvoice(currentInvoice);
+  } catch (err) {
+    showError(err.message);
+  }
+}
+
+function renderInvoice(inv) {
+  document.getElementById('loading-state').classList.add('d-none');
+  document.getElementById('main-content').classList.remove('d-none');
+
+  // Header
+  document.getElementById('breadcrumb-invoice-number').textContent = inv.invoiceNumber;
+  document.getElementById('invoice-number-heading').textContent = inv.invoiceNumber;
+  document.getElementById('invoice-created-at').textContent = `Issued ${fmtDate(inv.createdAt)}`;
+  document.getElementById('invoice-status-badge').innerHTML = badge(inv.status);
+
+  // Details
+  document.getElementById('d-invoiceNumber').textContent = inv.invoiceNumber;
+  document.getElementById('d-billingPeriod').textContent = inv.billingPeriod;
+  document.getElementById('d-dueDate').textContent = fmtDate(inv.dueDate);
+  document.getElementById('d-paidDate').textContent = inv.paidDate ? fmtDate(inv.paidDate) : '—';
+  document.getElementById('d-policyID').textContent = inv.policyID;
+  document.getElementById('d-createdAt').textContent = fmtDate(inv.createdAt);
+
+  // Amount
+  document.getElementById('f-amount').textContent = fmt$(inv.amount);
+  document.getElementById('invoice-status-inline').innerHTML = badge(inv.status);
+
+  // Status-specific UI
+  if (inv.status === 'Paid') {
+    document.getElementById('paid-card').classList.remove('d-none');
+    document.getElementById('paid-on-date').textContent = fmtDate(inv.paidDate);
+  } else if (inv.status === 'Overdue') {
+    document.getElementById('overdue-notice').classList.remove('d-none');
+  }
+
+  // Action buttons
+  if (inv.status !== 'Paid') {
+    if (user.role === 'policyholder') {
+      document.getElementById('pay-card').classList.remove('d-none');
+      document.getElementById('pay-btn-amount').textContent = fmt$(inv.amount);
+    } else {
+      // Admin / underwriter
+      document.getElementById('admin-actions').classList.remove('d-none');
+      if (inv.status === 'Unpaid') {
+        document.getElementById('btn-mark-overdue').classList.remove('d-none');
+      }
+    }
+  }
+
+  renderLifecycle(inv);
+}
+
+function renderLifecycle(inv) {
+  const s = inv.status;
+  if (s === 'Paid') {
+    document.getElementById('bt-3').classList.add('bt-done');
+    document.getElementById('bt-4').classList.add('bt-done');
+    document.getElementById('bt-5').classList.add('bt-active');
+    document.getElementById('bt-4-content').innerHTML = `
+      <div class="bt-title">4. Payment Posted ✓ ${learnIcon('payment_posting')}</div>
+      <div class="bt-desc text-muted">${fmt$(inv.amount)} received on ${fmtDate(inv.paidDate)} — matched to this invoice and posted to the billing ledger. Accounts receivable updated.</div>`;
+  } else if (s === 'Overdue') {
+    document.getElementById('bt-3').classList.add('bt-done');
+    document.getElementById('bt-4').classList.add('bt-overdue');
+    document.getElementById('overdue-path-note').classList.remove('d-none');
+    document.getElementById('bt-4-content').innerHTML = `
+      <div class="bt-title">4. Overdue — Dunning Active ${learnIcon('dunning')}</div>
+      <div class="bt-desc text-muted">Payment not received by the due date. Escalating reminders are being sent. Invoice is being aged ${learnIcon('aging')} until payment is posted or the balance is written off ${learnIcon('write_off')}.</div>`;
+  } else {
+    // Unpaid — payment window still open
+    document.getElementById('bt-3').classList.add('bt-active');
+  }
+}
+
+function showError(msg) {
+  document.getElementById('loading-state').classList.add('d-none');
+  document.getElementById('error-state').classList.remove('d-none');
+  document.getElementById('error-msg').textContent = msg;
+}
+
+function openPayModal() {
+  document.getElementById('pay-invoice-number').textContent = currentInvoice.invoiceNumber;
+  document.getElementById('pay-invoice-amount').textContent = fmt$(currentInvoice.amount);
+  payModal.show();
+}
+
+document.getElementById('confirm-pay-btn').addEventListener('click', async () => {
+  try {
+    currentInvoice = await API.patch(`/billing/${invoiceId}/status`, { status: 'Paid' });
+    payModal.hide();
+    toast('Payment recorded successfully!');
+    // Re-render with fresh data
+    document.getElementById('pay-card').classList.add('d-none');
+    document.getElementById('overdue-notice').classList.add('d-none');
+    renderInvoice(currentInvoice);
+  } catch (err) { toast(err.message, 'danger'); }
+});
+
+async function markPaid() {
+  try {
+    currentInvoice = await API.patch(`/billing/${invoiceId}/status`, { status: 'Paid' });
+    toast('Invoice marked as paid');
+    document.getElementById('admin-actions').classList.add('d-none');
+    document.getElementById('overdue-notice').classList.add('d-none');
+    renderInvoice(currentInvoice);
+  } catch (err) { toast(err.message, 'danger'); }
+}
+
+async function markOverdue() {
+  try {
+    currentInvoice = await API.patch(`/billing/${invoiceId}/status`, { status: 'Overdue' });
+    toast('Invoice marked as overdue', 'warning');
+    document.getElementById('admin-actions').classList.add('d-none');
+    renderInvoice(currentInvoice);
+  } catch (err) { toast(err.message, 'danger'); }
+}
+
+loadInvoice();
+</script>
+</body>
+</html>

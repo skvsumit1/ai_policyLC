@@ -1,0 +1,53 @@
+[
+  {
+    "id": "inv-001",
+    "invoiceNumber": "INV-2024-001",
+    "policyID": "pol-001",
+    "policyholderID": "u-003",
+    "amount": 45,
+    "status": "Paid",
+    "dueDate": "2024-02-01",
+    "paidDate": "2024-01-28",
+    "billingPeriod": "2024-01-01 to 2024-01-31",
+    "createdAt": "2024-01-01T00:00:00.000Z"
+  },
+  {
+    "id": "inv-002",
+    "invoiceNumber": "INV-2024-002",
+    "policyID": "pol-001",
+    "policyholderID": "u-003",
+    "amount": 45,
+    "status": "Paid",
+    "dueDate": "2024-10-01",
+    "paidDate": "2026-09-21",
+    "billingPeriod": "2024-09-01 to 2024-09-30",
+    "createdAt": "2024-09-01T00:00:00.000Z",
+    "updatedAt": "2026-09-21T12:34:17.623Z"
+  },
+  {
+    "id": "inv-003",
+    "invoiceNumber": "INV-2024-003",
+    "policyID": "pol-002",
+    "policyholderID": "u-004",
+    "amount": 30,
+    "status": "Paid",
+    "dueDate": "2024-06-01",
+    "paidDate": "2026-09-21",
+    "billingPeriod": "2024-05-01 to 2024-05-31",
+    "createdAt": "2024-05-01T00:00:00.000Z",
+    "updatedAt": "2026-09-21T12:34:16.247Z"
+  },
+  {
+    "id": "inv-004",
+    "invoiceNumber": "INV-2024-004",
+    "policyID": "pol-003",
+    "policyholderID": "u-003",
+    "amount": 65,
+    "status": "Paid",
+    "dueDate": "2024-10-15",
+    "paidDate": "2026-09-21",
+    "billingPeriod": "2024-10-01 to 2024-10-31",
+    "createdAt": "2024-09-01T00:00:00.000Z",
+    "updatedAt": "2026-09-21T12:34:11.932Z"
+  }
+]

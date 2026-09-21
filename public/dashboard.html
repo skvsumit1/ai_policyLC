@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Dashboard — DentalCare Insurance</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+  <div class="container-fluid px-4">
+    <a class="navbar-brand" href="index.html">🦷 DentalCare</a>
+    <div class="ms-auto d-flex align-items-center gap-3">
+      <span class="text-white small" id="user-greeting"></span>
+      <button class="btn btn-outline-light btn-sm" onclick="logout()">Sign Out</button>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid px-4 py-4">
+
+  <!-- Page header -->
+  <div class="mb-4">
+    <h4 class="fw-bold mb-0">My Dashboard</h4>
+    <p class="text-muted small mb-0">Overview of your policy, billing, and claims</p>
+  </div>
+
+  <!-- Stat cards -->
+  <div class="row g-3 mb-4" id="stat-cards">
+    <div class="col-sm-6 col-lg-3">
+      <div class="card stat-card green p-3 shadow-sm">
+        <div class="stat-label">Policy Status</div>
+        <div class="stat-value" id="stat-policy-status">—</div>
+        <div class="small text-muted" id="stat-policy-number">—</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <div class="card stat-card blue p-3 shadow-sm">
+        <div class="stat-label">Annual Benefit Remaining</div>
+        <div class="stat-value" id="stat-remaining">—</div>
+        <div class="small text-muted" id="stat-annual-max">of — annual max</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <div class="card stat-card yellow p-3 shadow-sm">
+        <div class="stat-label">Current Balance Due</div>
+        <div class="stat-value" id="stat-due">—</div>
+        <div class="small text-muted" id="stat-due-date">Due —</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+      <div class="card stat-card purple p-3 shadow-sm">
+        <div class="stat-label">Open Claims</div>
+        <div class="stat-value" id="stat-open-claims">—</div>
+        <div class="small text-muted">pending review</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+
+    <!-- Policy detail -->
+    <div class="col-lg-5">
+      <div class="card section-card h-100">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span>My Active Policy</span>
+          <span class="badge bg-secondary small" id="policy-plan-type">—</span>
+        </div>
+        <div class="card-body" id="policy-detail">
+          <div class="empty-state"><span class="icon">📋</span>No active policy found.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent claims -->
+    <div class="col-lg-7">
+      <div class="card section-card">
+        <div class="card-header">Recent Claims</div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-sm mb-0">
+              <thead>
+                <tr>
+                  <th>Claim #</th>
+                  <th>Date</th>
+                  <th>CDT Code</th>
+                  <th>Description</th>
+                  <th>Charged</th>
+                  <th>Paid</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="claims-table-body">
+                <tr><td colspan="7" class="empty-state"><span class="icon">🔍</span>No claims found.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Billing history -->
+      <div class="card section-card mt-4">
+        <div class="card-header">Billing History</div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-sm mb-0">
+              <thead>
+                <tr>
+                  <th>Invoice #</th>
+                  <th>Period <span class="learn-icon" data-learn="billing_period"></span></th>
+                  <th>Amount <span class="learn-icon" data-learn="premium_calculation"></span></th>
+                  <th>Due Date <span class="learn-icon" data-learn="grace_period"></span></th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="billing-table-body">
+                <tr><td colspan="6" class="empty-state"><span class="icon">🧾</span>No invoices found.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Pay Invoice Modal -->
+<div class="modal fade" id="payModal" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h6 class="modal-title">Confirm Payment</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-1">Mark invoice <strong id="pay-invoice-number"></strong> as paid?</p>
+        <p class="text-muted small">Amount: <strong id="pay-invoice-amount"></strong></p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-sm btn-success" id="confirm-pay-btn">Confirm Payment</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/app.js"></script>
+<script>
+requireLogin();
+const user = getUser();
+document.getElementById('user-greeting').textContent = `👤 ${user.name}`;
+
+let activePolicy = null;
+let payInvoiceId = null;
+const payModal = new bootstrap.Modal(document.getElementById('payModal'));
+
+async function loadDashboard() {
+  try {
+    // Load policies
+    const policies = await API.get(`/policies/holder/${user.id}`);
+    activePolicy = policies.find(p => p.status === 'Active') || policies[0] || null;
+
+    if (activePolicy) {
+      document.getElementById('stat-policy-status').innerHTML = badge(activePolicy.status);
+      document.getElementById('stat-policy-number').innerHTML = `<a href="policy-detail.html?id=${activePolicy.id}" class="text-decoration-none text-muted">${activePolicy.policyNumber}</a>`;
+      document.getElementById('stat-remaining').textContent = fmt$(activePolicy.remainingBenefit);
+      document.getElementById('stat-annual-max').textContent = `of ${fmt$(activePolicy.annualMaximum)} annual max`;
+      document.getElementById('policy-plan-type').textContent = activePolicy.planType;
+      renderPolicyDetail(activePolicy);
+    }
+
+    // Load invoices
+    const invoices = await API.get(`/billing/holder/${user.id}`);
+    const unpaid = invoices.find(i => i.status === 'Unpaid' || i.status === 'Overdue');
+    document.getElementById('stat-due').textContent = unpaid ? fmt$(unpaid.amount) : '$0.00';
+    document.getElementById('stat-due-date').textContent = unpaid ? `Due ${fmtDate(unpaid.dueDate)}` : 'No outstanding balance';
+    renderInvoices(invoices);
+
+    // Load claims
+    const claims = await API.get(`/claims/holder/${user.id}`);
+    const open = claims.filter(c => c.status === 'Pending' || c.status === 'Under_Review').length;
+    document.getElementById('stat-open-claims').textContent = open;
+    renderClaims(claims);
+
+  } catch (err) {
+    toast(err.message, 'danger');
+  }
+}
+
+function renderPolicyDetail(p) {
+  const pct = p.annualMaximum > 0 ? Math.round((p.remainingBenefit / p.annualMaximum) * 100) : 0;
+  const PLAN_KEYS = { PPO: 'ppo', HMO: 'hmo', EPO: 'epo', TRICARE: 'tricare', Medicare_Advantage: 'medicare_advantage' };
+  document.getElementById('policy-detail').innerHTML = `
+    <dl class="row mb-3 small">
+      <dt class="col-5">Policy Number</dt><dd class="col-7"><a href="policy-detail.html?id=${p.id}" class="text-decoration-none fw-semibold">${p.policyNumber}</a></dd>
+      <dt class="col-5">Status</dt><dd class="col-7">${badge(p.status)}</dd>
+      <dt class="col-5">Plan Type</dt><dd class="col-7">${p.planType} ${learnIcon(PLAN_KEYS[p.planType] || '')}</dd>
+      <dt class="col-5">Effective ${learnIcon('effective_date')}</dt><dd class="col-7">${fmtDate(p.effectiveDate)}</dd>
+      <dt class="col-5">Expires ${learnIcon('expiration_date')}</dt><dd class="col-7">${fmtDate(p.expirationDate)}</dd>
+      <dt class="col-5">Premium ${learnIcon('premium')}</dt><dd class="col-7">${fmt$(p.premiumAmount)} / ${p.premiumFrequency}</dd>
+      <dt class="col-5">Deductible ${learnIcon('deductible')}</dt><dd class="col-7">${fmt$(p.deductibleMet)} met of ${fmt$(p.deductible)}</dd>
+      <dt class="col-5">Waiting Period Ends ${learnIcon('waiting_period')}</dt><dd class="col-7">${fmtDate(p.waitingPeriodEndDate)}</dd>
+    </dl>
+    <div class="mb-1 d-flex justify-content-between small">
+      <span>Benefit used ${learnIcon('annual_max')}</span><span>${fmt$(p.annualMaximum - p.remainingBenefit)} / ${fmt$(p.annualMaximum)}</span>
+    </div>
+    <div class="progress coverage-bar">
+      <div class="progress-bar bg-primary" style="width:${100 - pct}%"></div>
+    </div>
+    <div class="mt-3 border-top pt-3">
+      <div class="small fw-semibold mb-2 text-muted">Coverage Tiers ${learnIcon('coverage_tier')}</div>
+      <div class="row g-1 text-center">
+        ${['preventive','basic','major','orthodontic'].map(t => `
+          <div class="col-3">
+            <div class="border rounded p-2">
+              <div class="fw-bold text-primary">${p.coverageTiers[t]}%</div>
+              <div style="font-size:.7rem" class="text-muted">${t.charAt(0).toUpperCase()+t.slice(1)} ${learnIcon(t)}</div>
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+function renderClaims(claims) {
+  const tbody = document.getElementById('claims-table-body');
+  if (!claims.length) return;
+  tbody.innerHTML = claims.slice(0,8).map(c => `
+    <tr>
+      <td class="small"><a href="claim-detail.html?id=${c.id}" class="text-decoration-none fw-semibold">${c.claimNumber}</a></td>
+      <td class="small">${fmtDate(c.serviceDate)}</td>
+      <td><code class="small">${c.cdtCode}</code></td>
+      <td class="small" style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${c.description}">${c.description}</td>
+      <td class="small">${fmt$(c.chargedAmount)}</td>
+      <td class="small">${fmt$(c.paidAmount)}</td>
+      <td>${badge(c.status)}</td>
+    </tr>`).join('');
+}
+
+function renderInvoices(invoices) {
+  const tbody = document.getElementById('billing-table-body');
+  if (!invoices.length) return;
+  tbody.innerHTML = invoices.map(inv => `
+    <tr>
+      <td class="small"><a href="billing-detail.html?id=${inv.id}" class="text-decoration-none fw-semibold">${inv.invoiceNumber}</a></td>
+      <td class="small">${inv.billingPeriod}</td>
+      <td class="small">${fmt$(inv.amount)}</td>
+      <td class="small">${fmtDate(inv.dueDate)}</td>
+      <td>${badge(inv.status)}</td>
+      <td class="d-flex gap-1 align-items-center">
+        ${inv.status !== 'Paid' ? `<button class="btn btn-sm btn-outline-success py-0" onclick="openPayModal('${inv.id}','${inv.invoiceNumber}',${inv.amount})">Pay</button>` : '<span class="text-muted small">—</span>'}
+      </td>
+    </tr>`).join('');
+}
+
+function openPayModal(id, number, amount) {
+  payInvoiceId = id;
+  document.getElementById('pay-invoice-number').textContent = number;
+  document.getElementById('pay-invoice-amount').textContent = fmt$(amount);
+  payModal.show();
+}
+
+document.getElementById('confirm-pay-btn').addEventListener('click', async () => {
+  try {
+    await API.patch(`/billing/${payInvoiceId}/status`, { status: 'Paid' });
+    payModal.hide();
+    toast('Payment recorded successfully!');
+    loadDashboard();
+  } catch (err) { toast(err.message, 'danger'); }
+});
+
+loadDashboard();
+</script>
+</body>
+</html>

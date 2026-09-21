@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Console — DentalCare Insurance</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container-fluid px-4">
+    <a class="navbar-brand" href="index.html">🦷 DentalCare <span class="badge bg-warning text-dark ms-1 small">Admin</span></a>
+    <div class="ms-auto d-flex align-items-center gap-3">
+      <span class="text-white-50 small" id="user-greeting"></span>
+      <button class="btn btn-outline-light btn-sm" onclick="logout()">Sign Out</button>
+    </div>
+  </div>
+</nav>
+
+<div class="container-fluid px-4 py-4">
+
+  <!-- Page header -->
+  <div class="mb-4">
+    <h4 class="fw-bold mb-0">Admin Console</h4>
+    <p class="text-muted small mb-0">Manage policies, billing, and claims across all policyholders</p>
+  </div>
+
+  <!-- Stat cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+      <div class="card stat-card blue p-3 shadow-sm">
+        <div class="stat-label">Total Policies</div>
+        <div class="stat-value" id="s-policies">—</div>
+        <div class="small text-muted" id="s-active-policies">— active</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="card stat-card yellow p-3 shadow-sm">
+        <div class="stat-label">Outstanding Invoices</div>
+        <div class="stat-value" id="s-outstanding">—</div>
+        <div class="small text-muted" id="s-overdue">— overdue</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="card stat-card red p-3 shadow-sm">
+        <div class="stat-label">Open Claims</div>
+        <div class="stat-value" id="s-open-claims">—</div>
+        <div class="small text-muted">submitted + under review</div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="card stat-card green p-3 shadow-sm">
+        <div class="stat-label">Total Revenue</div>
+        <div class="stat-value" id="s-revenue">—</div>
+        <div class="small text-muted">from paid invoices</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <ul class="nav nav-tabs mb-3" id="mainTabs">
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-policies">Policies</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-claims">Claims</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-billing">Billing</button></li>
+  </ul>
+
+  <div class="tab-content">
+
+    <!-- POLICIES TAB -->
+    <div class="tab-pane fade show active" id="tab-policies">
+      <div class="card section-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span>All Policies</span>
+          <div class="d-flex gap-2">
+            <input type="text" class="form-control form-control-sm" id="policy-search" placeholder="Search by policy # or holder…" style="width:220px">
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-sm mb-0" id="policies-table">
+              <thead>
+                <tr>
+                  <th>Policy #</th>
+                  <th>Holder</th>
+                  <th>Plan</th>
+                  <th>Status</th>
+                  <th>Annual Max</th>
+                  <th>Remaining</th>
+                  <th>Premium</th>
+                  <th>Effective</th>
+                  <th>Change Status</th>
+                </tr>
+              </thead>
+              <tbody id="policies-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CLAIMS TAB -->
+    <div class="tab-pane fade" id="tab-claims">
+      <div class="card section-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span>All Claims</span>
+          <div class="d-flex gap-2 align-items-center">
+            <select class="form-select form-select-sm" id="claim-status-filter" style="width:160px">
+              <option value="">All Statuses</option>
+              <option value="Pending">Pending</option>
+              <option value="Under_Review">Under Review</option>
+              <option value="Approved">Approved</option>
+              <option value="Denied">Denied</option>
+            </select>
+          </div>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-sm mb-0">
+              <thead>
+                <tr>
+                  <th>Claim #</th>
+                  <th>Holder</th>
+                  <th>Policy</th>
+                  <th>Service Date</th>
+                  <th>CDT Code <span class="learn-icon" data-learn="cdt_code"></span></th>
+                  <th>Description</th>
+                  <th>Charged</th>
+                  <th>Paid</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="claims-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BILLING TAB -->
+    <div class="tab-pane fade" id="tab-billing">
+      <div class="card section-card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span>All Invoices</span>
+          <select class="form-select form-select-sm" id="invoice-status-filter" style="width:160px">
+            <option value="">All Statuses</option>
+            <option value="Unpaid">Unpaid</option>
+            <option value="Paid">Paid</option>
+            <option value="Overdue">Overdue</option>
+          </select>
+        </div>
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-sm mb-0">
+              <thead>
+                <tr>
+                  <th>Invoice #</th>
+                  <th>Holder</th>
+                  <th>Policy</th>
+                  <th>Billing Period <span class="learn-icon" data-learn="billing_period"></span></th>
+                  <th>Amount <span class="learn-icon" data-learn="premium_calculation"></span></th>
+                  <th>Due Date <span class="learn-icon" data-learn="grace_period"></span></th>
+                  <th>Paid Date <span class="learn-icon" data-learn="payment_posting"></span></th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="invoices-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Adjudicate Claim Modal -->
+<div class="modal fade" id="adjModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h6 class="modal-title">Adjudicate Claim <span id="adj-claim-number" class="text-muted"></span></h6>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">Decision</label>
+          <select class="form-select" id="adj-status">
+            <option value="Under_Review">Under Review (hold)</option>
+            <option value="Approved">Approve</option>
+            <option value="Denied">Deny</option>
+          </select>
+        </div>
+        <div class="mb-3" id="adj-allowed-wrap">
+          <label class="form-label small fw-semibold">Allowed Amount (leave blank to use charged amount)</label>
+          <div class="input-group input-group-sm">
+            <span class="input-group-text">$</span>
+            <input type="number" class="form-control" id="adj-allowed" step="0.01" min="0" placeholder="e.g. 280.00">
+          </div>
+        </div>
+        <div class="mb-3" id="adj-denial-wrap" style="display:none">
+          <label class="form-label small fw-semibold">Denial Reason</label>
+          <textarea class="form-control form-control-sm" id="adj-denial" rows="2" placeholder="Required for denial"></textarea>
+        </div>
+        <div class="mb-1">
+          <label class="form-label small fw-semibold">Notes (optional)</label>
+          <input type="text" class="form-control form-control-sm" id="adj-notes">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-sm btn-primary" id="adj-submit-btn">Submit Decision</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/app.js"></script>
+<script>
+requireLogin();
+const user = getUser();
+if (user.role === 'policyholder') window.location.href = 'dashboard.html';
+document.getElementById('user-greeting').textContent = `👤 ${user.name} (${user.role})`;
+
+let allPolicies = [], allClaims = [], allInvoices = [], allUsers = [];
+let adjClaimId = null;
+const adjModal = new bootstrap.Modal(document.getElementById('adjModal'));
+
+async function loadAll() {
+  try {
+    [allUsers, allPolicies, allClaims, allInvoices] = await Promise.all([
+      API.get('/auth/users'),
+      API.get('/policies'),
+      API.get('/claims'),
+      API.get('/billing')
+    ]);
+    const billingSummary = await API.get('/billing/summary');
+    const claimsSummary = await API.get('/claims/summary');
+
+    // Stats
+    document.getElementById('s-policies').textContent = allPolicies.length;
+    document.getElementById('s-active-policies').textContent = `${allPolicies.filter(p => p.status === 'Active').length} active`;
+    document.getElementById('s-outstanding').textContent = fmt$(billingSummary.totalOutstanding);
+    document.getElementById('s-overdue').textContent = `${billingSummary.overdue} overdue`;
+    document.getElementById('s-open-claims').textContent = claimsSummary.pending + claimsSummary.under_review;
+    document.getElementById('s-revenue').textContent = fmt$(billingSummary.totalRevenue);
+
+    renderPolicies();
+    renderClaims();
+    renderInvoices();
+  } catch (err) { toast(err.message, 'danger'); }
+}
+
+function userNameById(id) {
+  const u = allUsers.find(u => u.id === id);
+  return u ? u.name : id;
+}
+
+/* ─── Policies ─── */
+const POLICY_STATUSES = ['Draft', 'Active', 'Lapsed', 'Cancelled', 'Pending_Renewal'];
+
+function renderPolicies(filter = '') {
+  const tbody = document.getElementById('policies-tbody');
+  let rows = allPolicies;
+  if (filter) {
+    const q = filter.toLowerCase();
+    rows = rows.filter(p => p.policyNumber.toLowerCase().includes(q) || userNameById(p.policyholderID).toLowerCase().includes(q));
+  }
+  if (!rows.length) { tbody.innerHTML = `<tr><td colspan="9" class="empty-state"><span class="icon">📋</span>No policies found.</td></tr>`; return; }
+  tbody.innerHTML = rows.map(p => `
+    <tr>
+      <td class="small fw-semibold"><a href="policy-detail.html?id=${p.id}" class="text-decoration-none">${p.policyNumber}</a></td>
+      <td class="small">${userNameById(p.policyholderID)}</td>
+      <td class="small">${p.planType}</td>
+      <td>${badge(p.status)}</td>
+      <td class="small">${fmt$(p.annualMaximum)}</td>
+      <td class="small">${fmt$(p.remainingBenefit)}</td>
+      <td class="small">${fmt$(p.premiumAmount)}/mo</td>
+      <td class="small">${fmtDate(p.effectiveDate)}</td>
+      <td>
+        <select class="form-select form-select-sm py-0" style="width:160px" onchange="changePolicyStatus('${p.id}', this.value, this)">
+          ${POLICY_STATUSES.map(s => `<option value="${s}" ${p.status === s ? 'selected' : ''}>${s.replace(/_/g,' ')}</option>`).join('')}
+        </select>
+      </td>
+    </tr>`).join('');
+}
+
+async function changePolicyStatus(id, status, el) {
+  try {
+    await API.patch(`/policies/${id}/status`, { status });
+    toast(`Policy status updated to ${status}`);
+    const p = allPolicies.find(p => p.id === id);
+    if (p) p.status = status;
+    renderPolicies(document.getElementById('policy-search').value);
+  } catch (err) {
+    toast(err.message, 'danger');
+    renderPolicies(); // reset select
+  }
+}
+
+document.getElementById('policy-search').addEventListener('input', e => renderPolicies(e.target.value));
+
+/* ─── Claims ─── */
+function renderClaims(filter = '') {
+  const tbody = document.getElementById('claims-tbody');
+  let rows = allClaims;
+  if (filter) rows = rows.filter(c => c.status === filter);
+  if (!rows.length) { tbody.innerHTML = `<tr><td colspan="10" class="empty-state"><span class="icon">📄</span>No claims found.</td></tr>`; return; }
+  tbody.innerHTML = rows.map(c => `
+    <tr>
+      <td class="small fw-semibold"><a href="claim-detail.html?id=${c.id}" class="text-decoration-none">${c.claimNumber}</a></td>
+      <td class="small">${userNameById(c.policyholderID)}</td>
+      <td class="small">${c.policyID}</td>
+      <td class="small">${fmtDate(c.serviceDate)}</td>
+      <td><code class="small">${c.cdtCode}</code></td>
+      <td class="small" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${c.description}">${c.description}</td>
+      <td class="small">${fmt$(c.chargedAmount)}</td>
+      <td class="small">${fmt$(c.paidAmount)}</td>
+      <td>${badge(c.status)}</td>
+      <td>
+        ${(c.status === 'Pending' || c.status === 'Under_Review')
+          ? `<button class="btn btn-xs btn-sm btn-outline-primary py-0 px-2" style="font-size:.75rem" onclick="openAdjModal('${c.id}','${c.claimNumber}')">Adjudicate</button>`
+          : '<span class="text-muted small">—</span>'}
+      </td>
+    </tr>`).join('');
+}
+
+document.getElementById('claim-status-filter').addEventListener('change', e => renderClaims(e.target.value));
+
+function openAdjModal(id, number) {
+  adjClaimId = id;
+  document.getElementById('adj-claim-number').textContent = `#${number}`;
+  document.getElementById('adj-status').value = 'Under_Review';
+  document.getElementById('adj-allowed').value = '';
+  document.getElementById('adj-denial').value = '';
+  document.getElementById('adj-notes').value = '';
+  document.getElementById('adj-denial-wrap').style.display = 'none';
+  document.getElementById('adj-allowed-wrap').style.display = 'block';
+  adjModal.show();
+}
+
+document.getElementById('adj-status').addEventListener('change', function() {
+  document.getElementById('adj-denial-wrap').style.display = this.value === 'Denied' ? 'block' : 'none';
+  document.getElementById('adj-allowed-wrap').style.display = this.value === 'Approved' ? 'block' : 'none';
+});
+
+document.getElementById('adj-submit-btn').addEventListener('click', async () => {
+  const status = document.getElementById('adj-status').value;
+  const allowedRaw = document.getElementById('adj-allowed').value;
+  const body = {
+    status,
+    notes: document.getElementById('adj-notes').value
+  };
+  if (status === 'Approved' && allowedRaw) body.allowedAmount = parseFloat(allowedRaw);
+  if (status === 'Denied') {
+    const reason = document.getElementById('adj-denial').value.trim();
+    if (!reason) { toast('Denial reason is required.', 'warning'); return; }
+    body.denialReason = reason;
+  }
+  try {
+    await API.patch(`/claims/${adjClaimId}/adjudicate`, body);
+    adjModal.hide();
+    toast(`Claim ${status.toLowerCase()} successfully`);
+    allClaims = await API.get('/claims');
+    renderClaims(document.getElementById('claim-status-filter').value);
+  } catch (err) { toast(err.message, 'danger'); }
+});
+
+/* ─── Invoices ─── */
+function renderInvoices(filter = '') {
+  const tbody = document.getElementById('invoices-tbody');
+  let rows = allInvoices;
+  if (filter) rows = rows.filter(i => i.status === filter);
+  if (!rows.length) { tbody.innerHTML = `<tr><td colspan="9" class="empty-state"><span class="icon">🧾</span>No invoices found.</td></tr>`; return; }
+  tbody.innerHTML = rows.map(inv => `
+    <tr>
+      <td class="small fw-semibold"><a href="billing-detail.html?id=${inv.id}" class="text-decoration-none">${inv.invoiceNumber}</a></td>
+      <td class="small">${userNameById(inv.policyholderID)}</td>
+      <td class="small">${inv.policyID}</td>
+      <td class="small">${inv.billingPeriod}</td>
+      <td class="small">${fmt$(inv.amount)}</td>
+      <td class="small">${fmtDate(inv.dueDate)}</td>
+      <td class="small">${fmtDate(inv.paidDate)}</td>
+      <td>${badge(inv.status)}</td>
+      <td>
+        ${inv.status !== 'Paid'
+          ? `<button class="btn btn-sm btn-outline-success py-0 px-2" style="font-size:.75rem" onclick="markPaid('${inv.id}')">Mark Paid</button>
+             ${inv.status === 'Unpaid' ? `<button class="btn btn-sm btn-outline-danger py-0 px-2 ms-1" style="font-size:.75rem" onclick="markOverdue('${inv.id}')">Mark Overdue</button>` : ''}`
+          : '<span class="text-muted small">—</span>'}
+      </td>
+    </tr>`).join('');
+}
+
+document.getElementById('invoice-status-filter').addEventListener('change', e => renderInvoices(e.target.value));
+
+async function markPaid(id) {
+  try {
+    await API.patch(`/billing/${id}/status`, { status: 'Paid' });
+    toast('Invoice marked as paid');
+    allInvoices = await API.get('/billing');
+    renderInvoices(document.getElementById('invoice-status-filter').value);
+  } catch (err) { toast(err.message, 'danger'); }
+}
+
+async function markOverdue(id) {
+  try {
+    await API.patch(`/billing/${id}/status`, { status: 'Overdue' });
+    toast('Invoice marked as overdue', 'warning');
+    allInvoices = await API.get('/billing');
+    renderInvoices(document.getElementById('invoice-status-filter').value);
+  } catch (err) { toast(err.message, 'danger'); }
+}
+
+loadAll();
+</script>
+</body>
+</html>

@@ -1,0 +1,172 @@
+:root {
+  --brand: #0d6efd;
+  --brand-dark: #0a58ca;
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background-color: #f0f2f5;
+}
+
+/* Navbar */
+.navbar { box-shadow: 0 1px 4px rgba(0,0,0,.1); }
+.navbar-brand { font-weight: 700; letter-spacing: -.3px; }
+
+/* Stat cards */
+.stat-card {
+  border: none;
+  border-left: 4px solid var(--brand);
+  border-radius: 8px;
+  transition: box-shadow .2s;
+}
+.stat-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,.12); }
+.stat-card.green  { border-left-color: #198754; }
+.stat-card.yellow { border-left-color: #fd7e14; }
+.stat-card.red    { border-left-color: #dc3545; }
+.stat-card.blue   { border-left-color: #0d6efd; }
+.stat-card.purple { border-left-color: #6f42c1; }
+.stat-value { font-size: 1.8rem; font-weight: 700; }
+.stat-label { font-size: .78rem; text-transform: uppercase; letter-spacing: .5px; color: #6c757d; }
+
+/* Tables */
+.table thead th {
+  background: #f8f9fa;
+  font-size: .82rem;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  color: #6c757d;
+  border-bottom: 2px solid #dee2e6;
+  white-space: nowrap;
+}
+.table tbody tr:hover { background: #f8f9fa; }
+
+/* Section card */
+.section-card {
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 1px 6px rgba(0,0,0,.08);
+}
+.section-card .card-header {
+  background: white;
+  border-bottom: 1px solid #eee;
+  font-weight: 600;
+  border-radius: 10px 10px 0 0 !important;
+}
+
+/* Badges */
+.badge { font-size: .72rem; }
+
+/* Coverage bar */
+.coverage-bar { height: 8px; border-radius: 4px; }
+
+/* Sidebar */
+.sidebar-nav .nav-link {
+  color: #495057;
+  border-radius: 6px;
+  padding: .5rem .75rem;
+  margin-bottom: 2px;
+}
+.sidebar-nav .nav-link:hover,
+.sidebar-nav .nav-link.active {
+  background: #e8f0fe;
+  color: var(--brand);
+  font-weight: 600;
+}
+.sidebar-nav .nav-link .me-2 { width: 18px; text-align: center; }
+
+/* Tabs */
+.nav-tabs .nav-link { color: #6c757d; }
+.nav-tabs .nav-link.active { color: var(--brand); font-weight: 600; }
+
+/* Empty state */
+.empty-state {
+  padding: 3rem 1rem;
+  text-align: center;
+  color: #adb5bd;
+}
+.empty-state .icon { font-size: 2.5rem; display: block; margin-bottom: .5rem; }
+
+/* ── Learning Mode ──────────────────────────────────────────────────── */
+.learn-icon {
+  display: none;
+  position: relative;
+  cursor: help;
+  color: #fff;
+  background: #0d6efd;
+  font-size: 10px;
+  font-weight: 700;
+  font-style: normal;
+  border-radius: 50%;
+  width: 15px;
+  height: 15px;
+  text-align: center;
+  line-height: 15px;
+  margin-left: 4px;
+  vertical-align: middle;
+  user-select: none;
+  flex-shrink: 0;
+}
+.learning-mode .learn-icon { display: inline-block; }
+.learn-tip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1e293b;
+  color: #f1f5f9;
+  font-size: .74rem;
+  font-weight: 400;
+  width: 250px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  line-height: 1.5;
+  z-index: 99999;
+  pointer-events: none;
+  box-shadow: 0 4px 20px rgba(0,0,0,.35);
+  white-space: normal;
+  text-align: left;
+}
+.learn-icon:hover .learn-tip { display: block; }
+.learn-tip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #1e293b;
+}
+
+/* ── Billing Timeline ───────────────────────────────────────────────── */
+.billing-timeline { display: flex; flex-direction: column; }
+.bt-step {
+  display: flex;
+  gap: 14px;
+  padding-bottom: 22px;
+  position: relative;
+}
+.bt-step:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: 9px;
+  top: 22px;
+  bottom: 0;
+  width: 2px;
+  background: #dee2e6;
+}
+.bt-step.bt-done:not(:last-child)::before { background: #198754; }
+.bt-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #dee2e6;
+  flex-shrink: 0;
+  margin-top: 1px;
+  z-index: 1;
+}
+.bt-step.bt-done  .bt-dot { background: #198754; }
+.bt-step.bt-active .bt-dot { background: #0d6efd; box-shadow: 0 0 0 4px rgba(13,110,253,.18); }
+.bt-step.bt-overdue .bt-dot { background: #dc3545; box-shadow: 0 0 0 4px rgba(220,53,69,.18); }
+.bt-title { font-size: .88rem; font-weight: 600; margin-bottom: 2px; }
+.bt-desc  { font-size: .8rem; line-height: 1.55; }

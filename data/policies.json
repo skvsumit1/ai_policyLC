@@ -1,0 +1,74 @@
+[
+  {
+    "id": "pol-001",
+    "policyNumber": "POL-2024-001",
+    "policyholderID": "u-003",
+    "status": "Active",
+    "planType": "PPO",
+    "annualMaximum": 2000,
+    "deductible": 100,
+    "deductibleMet": 100,
+    "premiumAmount": 45.00,
+    "premiumFrequency": "Monthly",
+    "effectiveDate": "2024-01-01",
+    "expirationDate": "2024-12-31",
+    "waitingPeriodEndDate": "2024-04-01",
+    "coverageTiers": {
+      "preventive": 100,
+      "basic": 80,
+      "major": 50,
+      "orthodontic": 0
+    },
+    "remainingBenefit": 1650,
+    "createdAt": "2024-01-01T00:00:00.000Z",
+    "updatedAt": "2024-09-01T00:00:00.000Z"
+  },
+  {
+    "id": "pol-002",
+    "policyNumber": "POL-2024-002",
+    "policyholderID": "u-004",
+    "status": "Lapsed",
+    "planType": "HMO",
+    "annualMaximum": 1500,
+    "deductible": 50,
+    "deductibleMet": 50,
+    "premiumAmount": 30.00,
+    "premiumFrequency": "Monthly",
+    "effectiveDate": "2024-01-01",
+    "expirationDate": "2024-12-31",
+    "waitingPeriodEndDate": "2024-04-01",
+    "coverageTiers": {
+      "preventive": 100,
+      "basic": 70,
+      "major": 40,
+      "orthodontic": 0
+    },
+    "remainingBenefit": 900,
+    "createdAt": "2024-01-01T00:00:00.000Z",
+    "updatedAt": "2024-06-01T00:00:00.000Z"
+  },
+  {
+    "id": "pol-003",
+    "policyNumber": "POL-2024-003",
+    "policyholderID": "u-003",
+    "status": "Draft",
+    "planType": "PPO",
+    "annualMaximum": 3000,
+    "deductible": 150,
+    "deductibleMet": 0,
+    "premiumAmount": 65.00,
+    "premiumFrequency": "Monthly",
+    "effectiveDate": null,
+    "expirationDate": null,
+    "waitingPeriodEndDate": null,
+    "coverageTiers": {
+      "preventive": 100,
+      "basic": 80,
+      "major": 60,
+      "orthodontic": 50
+    },
+    "remainingBenefit": 3000,
+    "createdAt": "2024-09-01T00:00:00.000Z",
+    "updatedAt": "2024-09-01T00:00:00.000Z"
+  }
+]

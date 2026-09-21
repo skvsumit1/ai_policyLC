@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — DentalCare Insurance</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+  </style>
+</head>
+<body>
+  <div class="card shadow p-4" style="width:380px; max-width:95vw">
+    <div class="text-center mb-4">
+      <span style="font-size:2.5rem">🦷</span>
+      <h5 class="fw-bold text-primary mt-1 mb-0">DentalCare Insurance</h5>
+      <small class="text-muted">Sign in to your account</small>
+    </div>
+
+    <div id="err" class="alert alert-danger d-none py-2 small"></div>
+
+    <form id="login-form">
+      <div class="mb-3">
+        <label class="form-label fw-semibold small">Email address</label>
+        <input type="email" class="form-control" id="email" placeholder="you@example.com" required>
+      </div>
+      <div class="mb-4">
+        <label class="form-label fw-semibold small">Password</label>
+        <input type="password" class="form-control" id="password" placeholder="••••••••" required>
+      </div>
+      <button type="submit" id="submit-btn" class="btn btn-primary w-100">Sign In</button>
+    </form>
+
+    <hr class="my-3">
+    <div class="small text-muted">
+      <strong class="d-block mb-1">Demo credentials:</strong>
+      <table class="w-100">
+        <tr><td>Admin</td><td class="text-end"><code>admin@dentalco.com / admin123</code></td></tr>
+        <tr><td>Underwriter</td><td class="text-end"><code>mark.underwriter@dentalco.com / mark123</code></td></tr>
+        <tr><td>Policyholder</td><td class="text-end"><code>james.carter@email.com / james123</code></td></tr>
+        <tr><td>Policyholder 2</td><td class="text-end"><code>linda.park@email.com / linda123</code></td></tr>
+      </table>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script>
+    if (getUser()) window.location.href = 'dashboard.html';
+
+    document.getElementById('login-form').addEventListener('submit', async e => {
+      e.preventDefault();
+      const btn = document.getElementById('submit-btn');
+      btn.disabled = true; btn.textContent = 'Signing in…';
+      const errEl = document.getElementById('err');
+      errEl.classList.add('d-none');
+
+      try {
+        const data = await API.post('/auth/login', {
+          email: document.getElementById('email').value,
+          password: document.getElementById('password').value
+        });
+        localStorage.setItem('currentUser', JSON.stringify(data.user));
+        window.location.href = (data.user.role === 'admin' || data.user.role === 'underwriter')
+          ? 'admin.html' : 'dashboard.html';
+      } catch (err) {
+        errEl.textContent = err.message;
+        errEl.classList.remove('d-none');
+        btn.disabled = false; btn.textContent = 'Sign In';
+      }
+    });
+  </script>
+</body>
+</html>
